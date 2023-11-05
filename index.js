@@ -26,6 +26,7 @@ async function run() {
 
 
     const foodCollection = client.db('FlavorFrontiersManagement').collection('foods');
+    const purchasedFoodCollection = client.db('FlavorFrontiersManagement').collection('purchasedFoods');
     // Send a ping to confirm a successful connection
 
 
@@ -60,15 +61,53 @@ async function run() {
         })
        res.send(categories);
     })
+
+        app.post('/add-to-cart', async(req, res)=>{
+        const data = req.body;
+        const id = data.food_id;
+        const email = data.email;
+        const exist = await purchasedFoodCollection.findOne({
+            'email':email,
+            'food_id': id
+        })
+        if(exist){
+            const {quantity} = exist;
+            const query = {
+                'email':email,
+                'food_id': id}
+            const updateDoc = {
+                $set:{
+                    ...exist,
+                    quantity: exist?.quantity+data?.quantity
+                }
+            }
+            const result = await purchasedFoodCollection.updateOne(query, updateDoc, {upsert: true});
+        }
+        else{
+            const result = await purchasedFoodCollection.insertOne(data);
+        }
+        const food = await foodCollection.findOne({
+            '_id': new ObjectId(id)
+        })
+        const foodUpdateDoc = {
+            $set: {
+                ...food, 
+                quantity: food?.quantity-data?.quantity
+            }
+        }
+        const foodResult = await foodCollection.updateOne({
+            '_id': new ObjectId(id)
+        }, foodUpdateDoc, {upsert:true})
+
+        res.send({message: 'Food Ordered Successfully', success: true}); 
+
+    })
     
   } finally {
     // await client.close();
   }
 }
 run().catch(console.dir);
-
-
-
 
 app.listen(port, async()=>{
     await client.connect();

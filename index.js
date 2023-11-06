@@ -67,8 +67,8 @@ async function run() {
                 food_origin: updatedProduct.food_origin,
                 food_category: updatedProduct.food_category,
                 food_description: updatedProduct.food_description,
-                making_processes: updatedProduct.making_process,
-                price_in_dollars: updatedProduct.food_price,
+                making_processes: updatedProduct.making_processes,
+                price_in_dollars: updatedProduct.price_in_dollars,
                 food_image: updatedProduct.food_image,
                 ingredients: updatedProduct.ingredients,
                 quantity: updatedProduct.quantity
@@ -118,7 +118,8 @@ async function run() {
         const foodUpdateDoc = {
             $set: {
                 ...food, 
-                quantity: food?.quantity-data?.quantity
+                quantity: food?.quantity-data?.quantity,
+                count: food?.count+ data?.quantity
             }
         }
         const foodResult = await foodCollection.updateOne({

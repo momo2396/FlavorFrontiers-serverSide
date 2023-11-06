@@ -47,8 +47,34 @@ async function run() {
         res.send(result);
     })
 
-    app.delete('/all-foods', async(req, res)=>{
-        const result = await foodCollection.deleteOne({_id: new ObjectId(req.query?.id)})
+    app.get('/single-food', async (req, res)=>{
+        const id = req.query.id;
+        const query = {_id: new ObjectId(id)};
+        const result =  await foodCollection.findOne(query);
+        res.send(result);
+    } )
+    
+    app.put('/update-foods/:id', async(req, res)=>{
+        const id = req.params.id;
+        const filter = {_id: new ObjectId(id)}
+        const options = {upsert: true}
+        const updatedProduct = req.body;
+        const product= {
+            $set: {
+                food_name: updatedProduct.food_name,
+                food_maker: updatedProduct.food_maker,
+                food_maker_email: updatedProduct.food_maker_email,
+                food_origin: updatedProduct.food_origin,
+                food_category: updatedProduct.food_category,
+                food_description: updatedProduct.food_description,
+                making_processes: updatedProduct.making_process,
+                price_in_dollars: updatedProduct.food_price,
+                food_image: updatedProduct.food_image,
+                ingredients: updatedProduct.ingredients,
+                quantity: updatedProduct.quantity
+            }
+        }
+        const result = await foodCollection.updateOne(filter, product, options);
         res.send(result);
     })
 
@@ -102,7 +128,31 @@ async function run() {
         res.send({message: 'Food Ordered Successfully', success: true}); 
 
     })
+    app.get('/my-cart', async(req, res)=>{
+        const email = req.query.email;
+        const query = {email:email}
+        const result = await purchasedFoodCollection.find(query).toArray();
+        console.log(result)
+        if(result) res.send(result)
+        else res.send({success:false})
+    })
     
+    app.delete('/delete-purchase', async(req, res)=>{
+        const id = req.query.id;
+        const query= {_id: new ObjectId(id)}
+        const exist = await purchasedFoodCollection.findOne(query)
+        const foodExist = await foodCollection.findOne({_id: new ObjectId(exist?.food_id)})
+        delete foodExist?._id;
+        const updateDoc = {
+            $set: {
+                ...foodExist,
+                quantity: exist?.quantity+foodExist?.quantity
+            }
+        }
+        const foodResult = await foodCollection.updateOne({_id: new ObjectId(exist?.food_id)},updateDoc, {upsert: true})
+        const result = await purchasedFoodCollection.deleteOne(query)
+        res.send(result);
+    })
   } finally {
     // await client.close();
   }

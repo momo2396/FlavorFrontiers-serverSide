@@ -4,7 +4,6 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 require('dotenv').config()
-console.log(process.env.DB_USER);
 
 app.use(cors());
 app.use(express.json());
@@ -35,9 +34,12 @@ async function run() {
     })
 
     app.get('/all-foods', async(req, res)=>{
+        const page= parseInt(req.query.page);
+        const size = parseInt(9);
+        console.log(page, size);
         const category = req.query.category;
         const query = category?{food_category: category}:{};
-        const result = await foodCollection.find(query).toArray();
+        const result = await foodCollection.find(query).skip(page*size).limit(size).toArray();
         res.send(result);
     })
 

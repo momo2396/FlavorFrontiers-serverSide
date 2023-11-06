@@ -54,9 +54,9 @@ async function run() {
         res.send(result);
     } )
     
-    app.put('/update-foods/:id', async(req, res)=>{
-        const id = req.params.id;
-        const filter = {_id: new ObjectId(id)}
+    app.put('/update-food', async(req, res)=>{
+        const id = req.query.id;
+        const query = {_id: new ObjectId(id)};
         const options = {upsert: true}
         const updatedProduct = req.body;
         const product= {
@@ -74,7 +74,7 @@ async function run() {
                 quantity: updatedProduct.quantity
             }
         }
-        const result = await foodCollection.updateOne(filter, product, options);
+        const result = await foodCollection.updateOne(query, product, options);
         res.send(result);
     })
 

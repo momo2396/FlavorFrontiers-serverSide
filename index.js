@@ -31,7 +31,7 @@ async function run() {
     app.get('/', (req, res)=>{
         res.send('Server is Running...');
     })
-    
+
     app.get('/user', async(req, res)=>{
         const email = req.query.email;
         const query = {email: email}
@@ -45,6 +45,11 @@ async function run() {
        if(!exist){
         const result = await userCollection.insertOne(req.body)
         res.send(result)
+       }
+       else{
+        res.send({
+            message: "User Already Exist"
+        })
        }
     })
 
@@ -63,7 +68,12 @@ async function run() {
         res.send(result);
       
     })
-
+    app.get('/top-foods', async(req, res)=>{
+        const result = await foodCollection.find().sort({
+            count: -1
+        }).toArray();
+        res.send(result.slice(0,6));
+    })
     app.post('/all-foods', async(req, res)=>{
         const data = req.body;
         const result = await foodCollection.insertOne(data);

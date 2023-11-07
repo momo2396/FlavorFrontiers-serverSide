@@ -25,14 +25,34 @@ async function run() {
 
 
     const foodCollection = client.db('FlavorFrontiersManagement').collection('foods');
+    const userCollection = client.db('FlavorFrontiersManagement').collection('user');
     const purchasedFoodCollection = client.db('FlavorFrontiersManagement').collection('purchasedFoods');
     // Send a ping to confirm a successful connection
-
-
     app.get('/', (req, res)=>{
         res.send('Server is Running...');
     })
+    
+    app.get('/user', async(req, res)=>{
+        const email = req.query.email;
+        const query = {email: email}
+        const result= await userCollection.findOne(query);
+        res.send(result);
+    })
+    app.post('/user', async(req, res)=>{
+       const email= req.body.email;
+       const query = {email:email}
+       const exist = await userCollection.findOne(query);
+       if(!exist){
+        const result = await userCollection.insertOne(req.body)
+        res.send(result)
+       }
+    })
 
+
+    app.get('/all-foods-no-condition', async(req, res)=>{
+        const result = await foodCollection.find({}).toArray();
+        res.send(result);
+    })
     app.get('/all-foods', async(req, res)=>{
         const page= parseInt(req.query.page);
         const size = parseInt(9);
@@ -41,6 +61,7 @@ async function run() {
         const query = category?{food_category: category}:{};
         const result = await foodCollection.find(query).skip(page*size).limit(size).toArray();
         res.send(result);
+      
     })
 
     app.post('/all-foods', async(req, res)=>{
